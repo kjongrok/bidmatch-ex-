@@ -1,0 +1,56 @@
+import React from 'react';
+import { Mail, ShieldCheck, ArrowRight, ChevronLeft } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+
+function PasswordReset() {
+  const navigate = useNavigate();
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', backgroundColor: '#f8fafc', alignItems: 'center', justifyContent: 'center', padding: '40px' }}>
+      
+      <div style={{ textAlign: 'center', marginBottom: '32px' }}>
+        <div style={{ width: '56px', height: '56px', backgroundColor: '#0f172a', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px' }}>
+          <ShieldCheck size={28} color="#fff" />
+        </div>
+        <div style={{ fontSize: '16px', fontWeight: 700, color: '#0f172a', marginBottom: '4px' }}>PPI Admin</div>
+        <div style={{ fontSize: '14px', color: '#64748b' }}>Public Procurement Intelligence</div>
+      </div>
+
+      <div style={{ width: '480px', backgroundColor: '#fff', borderRadius: '12px', padding: '40px', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)', marginBottom: '32px' }}>
+        
+        <h2 style={{ fontSize: '18px', fontWeight: 700, color: '#0f172a', marginBottom: '12px' }}>비밀번호 재설정</h2>
+        <p style={{ fontSize: '14px', color: '#475569', lineHeight: 1.6, marginBottom: '32px' }}>
+          가입하신 이메일 주소를 입력하시면 비밀번호를 재설정할 수 있는 링크를 보내드립니다.
+        </p>
+
+        <form onSubmit={(e) => { e.preventDefault(); alert('링크가 발송되었습니다.'); }}>
+          <div style={{ marginBottom: '24px' }}>
+            <label style={{ display: 'block', fontSize: '13px', fontWeight: 600, color: '#334155', marginBottom: '8px' }}>이메일 주소</label>
+            <div style={{ display: 'flex', alignItems: 'center', border: '1px solid #cbd5e1', borderRadius: '8px', padding: '0 16px', height: '48px' }}>
+              <Mail size={20} color="#94a3b8" style={{ marginRight: '12px' }} />
+              <input type="email" placeholder="example@domain.com" style={{ border: 'none', outline: 'none', width: '100%', fontSize: '15px' }} />
+            </div>
+          </div>
+
+          <button type="submit" style={{ width: '100%', height: '48px', backgroundColor: '#0f172a', color: '#fff', borderRadius: '8px', fontSize: '15px', fontWeight: 600, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', marginBottom: '32px' }}>
+            재설정 링크 발송 <ArrowRight size={18} />
+          </button>
+        </form>
+
+        <div style={{ borderTop: '1px solid #e2e8f0', paddingTop: '24px', textAlign: 'center' }}>
+          <button type="button" onClick={() => navigate('/login')} style={{ backgroundColor: 'transparent', border: 'none', color: '#0284c7', fontSize: '14px', fontWeight: 600, display: 'inline-flex', alignItems: 'center', gap: '4px', cursor: 'pointer' }}>
+            <ChevronLeft size={16} /> 로그인으로 돌아가기
+          </button>
+        </div>
+        
+      </div>
+
+      <div style={{ fontSize: '13px', color: '#64748b' }}>
+        도움이 필요하신가요? <a href="#" style={{ color: '#64748b', textDecoration: 'underline' }}>고객 지원 센터</a>
+      </div>
+
+    </div>
+  );
+}
+
+export default PasswordReset;

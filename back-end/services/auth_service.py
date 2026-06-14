@@ -1,0 +1,129 @@
+from werkzeug.security import generate_password_hash, check_password_hash
+from repositories.user_repository import UserRepository
+from utils.jwt_utils import encode_jwt
+
+class AuthService:
+    def __init__(self, user_repository=None):
+        self.repository = user_repository or UserRepository()
+
+    def signup(self, email, password, name, company_name=None, business_registration_no=None):
+        # 1. Check if email exists
+        existing_user = self.repository.find_by_email(email)
+        if existing_user:
+            return {"success": False, "message": "Email already in use"}, 400
+
+        # 2. Hash password
+        password_hash = generate_password_hash(password)
+
+        # 3. Create user
+        try:
+            user_id = self.repository.create_user_with_company(
+                email=email,
+                password_hash=password_hash,
+                name=name,
+                company_name=company_name,
+                business_registration_no=business_registration_no
+            )
+            return {"success": True, "user_id": user_id, "message": "User created successfully"}, 201
+        except Exception as e:
+            print(f"Signup error: {e}")
+            return {"success": False, "message": "Internal server error during signup"}, 500
+
+    def login(self, email, password):
+        user = self.repository.find_by_email(email)
+        if not user:
+            return {"success": False, "message": "Invalid email or password"}, 401
+
+        # Check password
+        if not user.get('password_hash') or not check_password_hash(user['password_hash'], password):
+            return {"success": False, "message": "Invalid email or password"}, 401
+
+        # Update last login
+        self.repository.update_last_login(user['id'])
+
+        # Generate token
+        token = encode_jwt(user['id'], user['email'], user['role'])
+
+        return {
+            "success": True,
+            "token": token,
+            "user": {
+                "id": user['id'],
+                "email": user['email'],
+                "name": user['name'],
+                "role": user['role'],
+                "company_name": user.get('company_name')
+            }
+        }, 200
+
+    def get_me(self, user_id):
+        user = self.repository.find_by_id(user_id)
+        if not user:
+            return {"success": False, "message": "User not found"}, 404
+        return {"success": True, "user": user}, 200
+
+    def update_user(self, user_id, name):
+        try:
+            self.repository.update_user_info(user_id, name)
+            return {"success": True, "message": "Personal info updated successfully"}, 200
+        except Exception as e:
+            print(f"Update user error: {e}")
+            return {"success": False, "message": "Failed to update personal info"}, 500
+
+    def update_company(self, user_id, data):
+        try:
+            self.repository.update_company_info(
+                user_id, 
+                data.get('company_name'), 
+                data.get('business_registration_no'), 
+                data.get('business_type'),
+                data.get('is_youth_company', 0),
+                data.get('is_woman_company', 0),
+                data.get('is_disabled_company', 0),
+                data.get('licenses', [])
+            )
+            return {"success": True, "message": "Company info updated successfully"}, 200
+        except Exception as e:
+            print(f"Update company error: {e}")
+            return {"success": False, "message": "Failed to update company info"}, 500
+
+    def update_password(self, user_id, old_password, new_password):
+        # 1. Fetch user to verify old password
+        user = self.repository.find_by_id(user_id)
+        if not user:
+            return {"success": False, "message": "User not found"}, 404
+
+        # Because find_by_id doesn't return password_hash, we need find_by_email to get hash
+        user_full = self.repository.find_by_email(user['email'])
+        if not check_password_hash(user_full['password_hash'], old_password):
+            return {"success": False, "message": "기존 비밀번호가 일치하지 않습니다."}, 400
+
+        # 2. Hash and update new password
+        new_hash = generate_password_hash(new_password)
+        try:
+            self.repository.update_password(user_id, new_hash)
+            return {"success": True, "message": "Password updated successfully"}, 200
+        except Exception as e:
+            print(f"Update password error: {e}")
+            return {"success": False, "message": "Failed to update password"}, 500
+
+    def verify_business_number(self, user_id, biz_no):
+        if not biz_no:
+            return {"success": False, "message": "사업자등록번호가 필요합니다."}, 400
+        clean_no = biz_no.replace("-", "").strip()
+        if len(clean_no) == 10 and clean_no.isdigit():
+            try:
+                self.repository.update_company_verification(user_id, 1)
+                return {"success": True, "message": "정상적인 사업자입니다."}, 200
+            except Exception as e:
+                print(f"Verify error: {e}")
+                return {"success": False, "message": "검증 상태 업데이트에 실패했습니다."}, 500
+        return {"success": False, "message": "유효하지 않은 사업자등록번호입니다."}, 400
+
+    def upload_verification_doc(self, user_id):
+        try:
+            self.repository.update_verification_status(user_id, 'PENDING')
+            return {"success": True, "message": "서류가 성공적으로 제출되었습니다. 심사 대기중입니다."}, 200
+        except Exception as e:
+            print(f"Upload doc error: {e}")
+            return {"success": False, "message": "서류 제출 상태 업데이트에 실패했습니다."}, 500
