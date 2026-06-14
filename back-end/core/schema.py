@@ -64,6 +64,8 @@ TABLES = {
             "is_youth_company": "BOOLEAN NOT NULL DEFAULT FALSE",
             "is_woman_company": "BOOLEAN NOT NULL DEFAULT FALSE",
             "is_disabled_company": "BOOLEAN NOT NULL DEFAULT FALSE",
+            "is_verified": "BOOLEAN NOT NULL DEFAULT FALSE",
+            "verification_status": "VARCHAR(30) NOT NULL DEFAULT 'UNVERIFIED'",
             "created_at": "DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP",
             "updated_at": "DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP",
         },
@@ -473,6 +475,29 @@ TABLES = {
                 "columns": ["created_by"],
                 "references": "users(id)",
                 "on_delete": "SET NULL",
+            },
+        },
+    },
+    "app_notifications": {
+        "columns": {
+            "id": "BIGINT NOT NULL AUTO_INCREMENT",
+            "user_id": "BIGINT NOT NULL",
+            "title": "VARCHAR(255) NOT NULL",
+            "message": "TEXT NOT NULL",
+            "bid_notice_id": "BIGINT NULL",
+            "is_read": "BOOLEAN NOT NULL DEFAULT FALSE",
+            "created_at": "DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP",
+        },
+        "primary_key": ["id"],
+        "unique_keys": {},
+        "indexes": {
+            "idx_app_notifications_user_id": ["user_id"],
+        },
+        "foreign_keys": {
+            "fk_app_notifications_user_id": {
+                "columns": ["user_id"],
+                "references": "users(id)",
+                "on_delete": "CASCADE",
             },
         },
     },

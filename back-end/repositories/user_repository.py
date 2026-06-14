@@ -73,6 +73,13 @@ class UserRepository:
                 cursor.execute(sql, (password_hash, user_id))
             conn.commit()
 
+    def update_email(self, user_id, new_email):
+        sql = "UPDATE users SET email = %s WHERE id = %s"
+        with get_connection() as conn:
+            with conn.cursor() as cursor:
+                cursor.execute(sql, (new_email, user_id))
+            conn.commit()
+
     def update_company_info(self, user_id, company_name, biz_no, biz_type, is_youth, is_woman, is_disabled, licenses):
         # Check if company exists
         check_sql = "SELECT id FROM company_profiles WHERE user_id = %s"
@@ -109,13 +116,48 @@ class UserRepository:
     def update_company_verification(self, user_id, is_verified):
         sql = "UPDATE company_profiles SET is_verified = %s WHERE user_id = %s"
         with get_connection() as conn:
-            with conn.cursor() as cursor:
-                cursor.execute(sql, (is_verified, user_id))
-            conn.commit()
+            try:
+                with conn.cursor() as cursor:
+                    cursor.execute(sql, (is_verified, user_id))
+                    if is_verified == 1:
+                        role_sql = "UPDATE users SET role = 'COMPANY' WHERE id = %s AND role = 'USER'"
+                        cursor.execute(role_sql, (user_id,))
+                conn.commit()
+            except pymysql.MySQLError as e:
+                conn.rollback()
+                raise e
 
     def update_verification_status(self, user_id, status):
         sql = "UPDATE company_profiles SET verification_status = %s WHERE user_id = %s"
         with get_connection() as conn:
+            try:
+                with conn.cursor() as cursor:
+                    cursor.execute(sql, (status, user_id))
+                    if status == 'APPROVED':
+                        role_sql = "UPDATE users SET role = 'COMPANY' WHERE id = %s AND role = 'USER'"
+                        cursor.execute(role_sql, (user_id,))
+                conn.commit()
+            except pymysql.MySQLError as e:
+                conn.rollback()
+                raise e
+
+    def get_all_companies_with_users(self):
+        sql = """
+            SELECT u.id as user_id, u.email, u.name, u.role,
+                   cp.company_name, cp.business_registration_no, cp.business_type,
+                   cp.is_verified, cp.verification_status, cp.updated_at
+            FROM users u
+            JOIN company_profiles cp ON u.id = cp.user_id
+            ORDER BY cp.updated_at DESC
+        """
+        with get_connection() as conn:
             with conn.cursor() as cursor:
-                cursor.execute(sql, (status, user_id))
+                cursor.execute(sql)
+                return cursor.fetchall()
+
+    def delete_user(self, user_id):
+        sql = "DELETE FROM users WHERE id = %s"
+        with get_connection() as conn:
+            with conn.cursor() as cursor:
+                cursor.execute(sql, (user_id,))
             conn.commit()

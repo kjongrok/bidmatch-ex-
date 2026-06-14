@@ -29,10 +29,12 @@ api.interceptors.response.use(
   (error) => {
     if (error.response && error.response.status === 401) {
       // If 401 Unauthorized, token might be expired.
-      // We can clear the token and force a reload/redirect to login.
       localStorage.removeItem('token');
-      // Uncomment the below line if you want to hard redirect on 401
-      // window.location.href = '/login';
+      // Only alert if we are not already on the login page
+      if (window.location.pathname !== '/login' && window.location.pathname !== '/signup') {
+        alert('세션이 만료되었습니다. 다시 로그인해주세요.');
+        window.location.href = '/login';
+      }
     }
     return Promise.reject(error);
   }

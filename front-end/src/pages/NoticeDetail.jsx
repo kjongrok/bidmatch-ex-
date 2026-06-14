@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import Layout from '../components/Layout/Layout';
 import Badge from '../components/UI/Badge';
-import { ArrowLeft, Heart, Share2, FileText, Calendar, Clock, AlarmClock, ExternalLink, TrendingUp, CheckCircle2 } from 'lucide-react';
+import { ArrowLeft, Heart, Share2, FileText, Calendar, Clock, AlarmClock, ExternalLink, TrendingUp, CheckCircle2, Sparkles } from 'lucide-react';
 import api from '../utils/api';
 
 function NoticeDetail() {
@@ -12,6 +12,27 @@ function NoticeDetail() {
   const { matchScore, matchKeywords } = location.state || {};
   const [notice, setNotice] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [aiSummary, setAiSummary] = useState(null);
+  const [aiLoading, setAiLoading] = useState(false);
+
+  const handleFetchAiSummary = () => {
+    setAiLoading(true);
+    api.get(`/bid-notices/${id}/summary`)
+      .then(res => {
+        if (res.data.success) {
+          setAiSummary(res.data.summary);
+        } else {
+          alert(res.data.message || "AI 요약에 실패했습니다.");
+        }
+      })
+      .catch(err => {
+        console.error(err);
+        alert("AI 요약 요청 중 오류가 발생했습니다.");
+      })
+      .finally(() => {
+        setAiLoading(false);
+      });
+  };
 
   useEffect(() => {
     api.get(`/bid-notices/${id}`)
@@ -106,7 +127,7 @@ function NoticeDetail() {
                 해당 공고는 {notice.demand_org_name || '국가기관'}에서 발주한 [{notice.title}] 사업입니다. 상세 입찰참가 자격 및 과업 지시서는 우측 하단 나라장터 원본 공고 링크를 통해 꼭 확인해 주시기 바랍니다.
               </div>
               
-              <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+              <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', marginBottom: '24px' }}>
                 {matchKeywords && matchKeywords.length > 0 ? matchKeywords.map((tag, idx) => (
                   <span key={idx} style={{ backgroundColor: '#e2e8f0', color: '#475569', padding: '6px 12px', borderRadius: '20px', fontSize: '13px', fontWeight: 600 }}>
                     #{tag}
@@ -116,6 +137,26 @@ function NoticeDetail() {
                     #{tag}
                   </span>
                 )) : <span style={{fontSize: '13px', color: '#94a3b8'}}>추출된 키워드가 없습니다.</span>)}
+              </div>
+
+              {/* AI Summary Section */}
+              <div style={{ padding: '24px', backgroundColor: '#fdf4ff', border: '1px solid #f0abfc', borderRadius: '12px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: aiSummary ? '16px' : '0' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#c026d3', fontWeight: 700, fontSize: '15px' }}>
+                    <Sparkles size={18} /> AI 입찰 핵심 분석
+                  </div>
+                  {!aiSummary && (
+                    <button onClick={handleFetchAiSummary} disabled={aiLoading} style={{ display: 'flex', alignItems: 'center', gap: '6px', backgroundColor: '#c026d3', color: '#fff', border: 'none', borderRadius: '6px', padding: '8px 16px', fontSize: '13px', fontWeight: 600, cursor: aiLoading ? 'not-allowed' : 'pointer' }}>
+                      {aiLoading ? '분석 중...' : '핵심 3줄 요약 받기'}
+                    </button>
+                  )}
+                </div>
+                
+                {aiSummary && (
+                  <div style={{ fontSize: '14px', lineHeight: 1.7, color: '#4a044e', whiteSpace: 'pre-wrap' }}>
+                    {aiSummary}
+                  </div>
+                )}
               </div>
             </div>
 

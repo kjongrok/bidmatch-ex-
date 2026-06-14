@@ -244,7 +244,7 @@ function UserDashboard() {
               </div>
               
               <div style={{textAlign:'center', marginTop:'16px'}}>
-                <button className="more-btn">더 보기 <ChevronDown size={14} style={{display:'inline', verticalAlign:'middle'}} /></button>
+                <button className="more-btn" onClick={() => navigate('/calendar')}>더 보기 <ChevronDown size={14} style={{display:'inline', verticalAlign:'middle'}} /></button>
               </div>
             </div>
           </div>

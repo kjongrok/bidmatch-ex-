@@ -6,7 +6,7 @@ import { AuthContext } from '../../contexts/AuthContext';
 const Sidebar = () => {
   const location = useLocation();
   const navigate = useNavigate();
-  const { logout } = useContext(AuthContext);
+  const { user, logout } = useContext(AuthContext);
 
   const isActive = (path) => location.pathname.startsWith(path);
 
@@ -20,8 +20,8 @@ const Sidebar = () => {
       <div className="sidebar-logo">
         <Building2 size={24} color="#fff" />
         <div style={{display: 'flex', flexDirection: 'column'}}>
-          <span style={{fontSize: '18px', fontWeight: 700, lineHeight: 1.2}}>PPI Admin</span>
-          <span style={{fontSize: '11px', color: '#94a3b8'}}>Procurement Intelligence</span>
+          <span style={{fontSize: '18px', fontWeight: 700, lineHeight: 1.2}}>BidMatch</span>
+          <span style={{fontSize: '11px', color: '#94a3b8'}}>나라장터 공고 알림</span>
         </div>
       </div>
       
@@ -50,10 +50,12 @@ const Sidebar = () => {
           <User size={20} />
           <span>내 정보</span>
         </button>
-        <button className={`nav-item ${isActive('/admin') ? 'active' : ''}`} onClick={() => navigate('/admin')}>
-          <Settings size={20} />
-          <span>설정 (관리자)</span>
-        </button>
+        {user?.role === 'ADMIN' && (
+          <button className={`nav-item ${isActive('/admin') ? 'active' : ''}`} onClick={() => navigate('/admin')}>
+            <Settings size={20} />
+            <span>설정 (관리자)</span>
+          </button>
+        )}
       </nav>
 
       <div className="sidebar-footer">

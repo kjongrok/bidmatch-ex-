@@ -10,7 +10,7 @@ class AuthService:
         # 1. Check if email exists
         existing_user = self.repository.find_by_email(email)
         if existing_user:
-            return {"success": False, "message": "Email already in use"}, 400
+            return {"success": False, "message": "이미 사용 중인 이메일입니다."}, 400
 
         # 2. Hash password
         password_hash = generate_password_hash(password)
@@ -24,19 +24,19 @@ class AuthService:
                 company_name=company_name,
                 business_registration_no=business_registration_no
             )
-            return {"success": True, "user_id": user_id, "message": "User created successfully"}, 201
+            return {"success": True, "user_id": user_id, "message": "회원가입이 완료되었습니다."}, 201
         except Exception as e:
             print(f"Signup error: {e}")
-            return {"success": False, "message": "Internal server error during signup"}, 500
+            return {"success": False, "message": "회원가입 처리 중 서버 오류가 발생했습니다."}, 500
 
     def login(self, email, password):
         user = self.repository.find_by_email(email)
         if not user:
-            return {"success": False, "message": "Invalid email or password"}, 401
+            return {"success": False, "message": "사용자를 찾을 수 없습니다."}, 401
 
         # Check password
         if not user.get('password_hash') or not check_password_hash(user['password_hash'], password):
-            return {"success": False, "message": "Invalid email or password"}, 401
+            return {"success": False, "message": "이메일 또는 비밀번호가 올바르지 않습니다."}, 401
 
         # Update last login
         self.repository.update_last_login(user['id'])
@@ -59,16 +59,37 @@ class AuthService:
     def get_me(self, user_id):
         user = self.repository.find_by_id(user_id)
         if not user:
-            return {"success": False, "message": "User not found"}, 404
+            return {"success": False, "message": "사용자를 찾을 수 없습니다."}, 404
         return {"success": True, "user": user}, 200
 
     def update_user(self, user_id, name):
         try:
             self.repository.update_user_info(user_id, name)
-            return {"success": True, "message": "Personal info updated successfully"}, 200
+            return {"success": True, "message": "개인 정보가 성공적으로 업데이트되었습니다."}, 200
         except Exception as e:
             print(f"Update user error: {e}")
-            return {"success": False, "message": "Failed to update personal info"}, 500
+            return {"success": False, "message": "개인 정보 업데이트에 실패했습니다."}, 500
+
+    def update_email(self, user_id, new_email):
+        # 중복 이메일 체크
+        existing_user = self.repository.find_by_email(new_email)
+        if existing_user and existing_user['id'] != user_id:
+            return {"success": False, "message": "이미 사용 중이거나 가입된 이메일입니다."}, 400
+
+        try:
+            self.repository.update_email(user_id, new_email)
+            user = self.repository.find_by_id(user_id)
+            # 이메일이 변경되었으므로 토큰 재발급
+            new_token = encode_jwt(user['id'], user['email'], user['role'])
+            return {
+                "success": True, 
+                "message": "이메일이 성공적으로 업데이트되었습니다.",
+                "token": new_token,
+                "email": user['email']
+            }, 200
+        except Exception as e:
+            print(f"Update email error: {e}")
+            return {"success": False, "message": "이메일 업데이트에 실패했습니다."}, 500
 
     def update_company(self, user_id, data):
         try:
@@ -82,16 +103,16 @@ class AuthService:
                 data.get('is_disabled_company', 0),
                 data.get('licenses', [])
             )
-            return {"success": True, "message": "Company info updated successfully"}, 200
+            return {"success": True, "message": "기업 정보가 성공적으로 업데이트되었습니다."}, 200
         except Exception as e:
             print(f"Update company error: {e}")
-            return {"success": False, "message": "Failed to update company info"}, 500
+            return {"success": False, "message": "기업 정보 업데이트에 실패했습니다."}, 500
 
     def update_password(self, user_id, old_password, new_password):
         # 1. Fetch user to verify old password
         user = self.repository.find_by_id(user_id)
         if not user:
-            return {"success": False, "message": "User not found"}, 404
+            return {"success": False, "message": "사용자를 찾을 수 없습니다."}, 404
 
         # Because find_by_id doesn't return password_hash, we need find_by_email to get hash
         user_full = self.repository.find_by_email(user['email'])
@@ -102,10 +123,10 @@ class AuthService:
         new_hash = generate_password_hash(new_password)
         try:
             self.repository.update_password(user_id, new_hash)
-            return {"success": True, "message": "Password updated successfully"}, 200
+            return {"success": True, "message": "비밀번호가 성공적으로 변경되었습니다."}, 200
         except Exception as e:
             print(f"Update password error: {e}")
-            return {"success": False, "message": "Failed to update password"}, 500
+            return {"success": False, "message": "비밀번호 변경에 실패했습니다."}, 500
 
     def verify_business_number(self, user_id, biz_no):
         if not biz_no:

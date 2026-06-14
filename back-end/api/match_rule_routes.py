@@ -36,5 +36,5 @@ def delete_match_rule(rule_id):
     user = request.user
     deleted = match_rule_service.delete_rule(rule_id, user['sub'])
     if not deleted:
-        return jsonify({"success": False, "message": "Match rule not found or unauthorized"}), 404
-    return jsonify({"success": True, "message": "Deleted successfully"}), 200
+        return jsonify({"success": False, "message": "조건을 찾을 수 없거나 권한이 없습니다."}), 404
+    return jsonify({"success": True, "message": "성공적으로 삭제되었습니다."}), 200

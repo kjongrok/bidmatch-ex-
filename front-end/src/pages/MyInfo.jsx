@@ -1,7 +1,8 @@
 import React, { useContext, useState, useEffect } from 'react';
 import Layout from '../components/Layout/Layout';
-import { User, Building, ShieldCheck, Edit3, Trash2, FileText, Plus, CheckCircle, Search, Upload } from 'lucide-react';
+import { User, Building, ShieldCheck, Edit3, Trash2, FileText, Plus, CheckCircle, Search, Upload, LogOut } from 'lucide-react';
 import { AuthContext } from '../contexts/AuthContext';
+import { useNavigate } from 'react-router-dom';
 import api from '../utils/api';
 
 const COMMON_LICENSES = [
@@ -18,7 +19,8 @@ const COMMON_LICENSES = [
 ];
 
 function MyInfo() {
-  const { user } = useContext(AuthContext);
+  const { user, updateUser, logout } = useContext(AuthContext);
+  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('personal'); 
   
   const [personalInfo, setPersonalInfo] = useState({ name: '', phone: '' });
@@ -72,8 +74,12 @@ function MyInfo() {
   const handleSavePersonal = async () => {
     try {
       const res = await api.put('/auth/me', { name: personalInfo.name });
-      if (res.data.success) alert('개인 정보가 성공적으로 업데이트되었습니다.');
-      else alert('업데이트 실패: ' + res.data.message);
+      if (res.data.success) {
+        alert('개인 정보가 성공적으로 업데이트되었습니다.');
+        updateUser({ name: personalInfo.name });
+      } else {
+        alert('업데이트 실패: ' + res.data.message);
+      }
     } catch (err) {
       alert('오류가 발생했습니다.');
     }
@@ -82,8 +88,15 @@ function MyInfo() {
   const handleSaveCompany = async () => {
     try {
       const res = await api.put('/auth/me/company', companyInfo);
-      if (res.data.success) alert('기업 정보가 갱신되었습니다.');
-      else alert('갱신 실패: ' + res.data.message);
+      if (res.data.success) {
+        alert('기업 정보가 갱신되었습니다.');
+        updateUser({ 
+          company_name: companyInfo.company_name,
+          role: companyInfo.is_verified ? 'COMPANY' : 'USER'
+        });
+      } else {
+        alert('갱신 실패: ' + res.data.message);
+      }
     } catch (err) {
       alert('오류가 발생했습니다.');
     }
@@ -139,6 +152,29 @@ function MyInfo() {
       }
     } catch (err) {
       alert('서류 제출 실패');
+    }
+  };
+
+  const handleLogout = () => {
+    logout();
+    navigate('/login');
+  };
+
+  const handleDeleteAccount = async () => {
+    if (window.confirm("정말로 계정을 탈퇴하시겠습니까?\n내 정보, 맞춤 설정, 스크랩 등 모든 데이터가 영구히 삭제되며 복구할 수 없습니다.")) {
+      try {
+        const res = await api.delete('/auth/me');
+        if (res.data.success) {
+          alert('계정이 성공적으로 삭제되었습니다. 이용해 주셔서 감사합니다.');
+          logout();
+          navigate('/login', { replace: true });
+        } else {
+          alert(res.data.message || '탈퇴 처리 중 오류가 발생했습니다.');
+        }
+      } catch (err) {
+        console.error(err);
+        alert('서버와 통신할 수 없습니다.');
+      }
     }
   };
 
@@ -208,7 +244,7 @@ function MyInfo() {
                       </div>
                       <div>
                         <label style={{ display: 'block', fontSize: '13px', fontWeight: 600, color: '#334155', marginBottom: '8px' }}>회원 구분</label>
-                        <input type="text" value={user?.role === 'ADMIN' ? '관리자' : '일반 회원'} style={{ width: '100%', height: '44px', border: '1px solid #cbd5e1', borderRadius: '8px', padding: '0 16px', fontSize: '14px', color: '#0f172a', backgroundColor: '#f8fafc' }} readOnly />
+                        <input type="text" value={user?.role === 'ADMIN' ? '관리자' : user?.role === 'COMPANY' ? '기업 회원' : '일반 회원'} style={{ width: '100%', height: '44px', border: '1px solid #cbd5e1', borderRadius: '8px', padding: '0 16px', fontSize: '14px', color: '#0f172a', backgroundColor: '#f8fafc' }} readOnly />
                       </div>
                     </div>
                     <div>
@@ -358,8 +394,12 @@ function MyInfo() {
                     <input type="password" value={passwordData.confirm_password} onChange={e => setPasswordData({...passwordData, confirm_password: e.target.value})} style={{ width: '100%', height: '44px', border: '1px solid #cbd5e1', borderRadius: '8px', padding: '0 16px', fontSize: '14px' }} />
                   </div>
                 </div>
-                <div style={{ padding: '24px 40px', borderTop: '1px solid #e2e8f0', display: 'flex', justifyContent: 'flex-end' }}>
+                <div style={{ padding: '24px 40px', borderTop: '1px solid #e2e8f0', display: 'flex', flexDirection: 'column', gap: '16px' }}>
                   <button onClick={handleSavePassword} style={{ height: '40px', padding: '0 24px', backgroundColor: '#0f172a', border: 'none', borderRadius: '8px', fontWeight: 600, fontSize: '14px', color: '#fff', cursor: 'pointer' }}>비밀번호 변경</button>
+                  <div style={{ borderTop: '1px solid #e2e8f0', paddingTop: '16px', marginTop: '8px', display: 'flex', justifyContent: 'flex-end', alignItems: 'center', gap: '12px' }}>
+                    <button onClick={handleDeleteAccount} style={{ height: '36px', padding: '0 16px', backgroundColor: '#fff', color: '#ef4444', border: '1px solid #fca5a5', borderRadius: '6px', fontSize: '13px', fontWeight: 600, cursor: 'pointer' }}>계정 탈퇴</button>
+                    <button onClick={handleLogout} style={{ height: '36px', padding: '0 16px', backgroundColor: '#f1f5f9', color: '#475569', border: '1px solid #cbd5e1', borderRadius: '6px', fontSize: '13px', fontWeight: 600, cursor: 'pointer', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '6px' }}><LogOut size={16} /> 로그아웃</button>
+                  </div>
                 </div>
               </div>
             )}

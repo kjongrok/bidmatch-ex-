@@ -10,6 +10,8 @@ function Notifications() {
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [filterKeyword, setFilterKeyword] = useState('');
   const [filterReadStatus, setFilterReadStatus] = useState('ALL');
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -30,6 +32,14 @@ function Notifications() {
     if (filterReadStatus === 'UNREAD' && n.is_read) return false;
     return true;
   });
+
+  // 필터가 변경되면 페이지를 1로 리셋
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [filterKeyword, filterReadStatus]);
+
+  const totalPages = Math.ceil(filteredNotifications.length / itemsPerPage);
+  const currentItems = filteredNotifications.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
 
   const downloadCSV = () => {
     if (filteredNotifications.length === 0) {
@@ -135,15 +145,15 @@ function Notifications() {
             <table>
               <thead>
                 <tr>
-                  <th>알림 일시</th>
-                  <th>상태</th>
-                  <th>제목</th>
-                  <th>알림 내용</th>
-                  <th style={{ textAlign: 'right' }}>상세 보기</th>
+                  <th style={{ width: '12%', minWidth: '100px' }}>알림 일시</th>
+                  <th style={{ width: '10%', minWidth: '80px' }}>상태</th>
+                  <th style={{ width: '15%', minWidth: '120px' }}>알림 유형</th>
+                  <th style={{ width: '52%', minWidth: '350px' }}>상세 내용</th>
+                  <th style={{ width: '11%', textAlign: 'right', minWidth: '100px' }}>상세 보기</th>
                 </tr>
               </thead>
               <tbody>
-                {filteredNotifications.map((n, i) => {
+                {currentItems.map((n, i) => {
                   const d = new Date(n.created_at);
                   const dateStr = d.toLocaleDateString();
                   const timeStr = d.toLocaleTimeString();
@@ -180,16 +190,60 @@ function Notifications() {
           </div>
           
           <div style={{ padding: '20px 24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderTop: '1px solid #e2e8f0', backgroundColor: '#f8fafc', borderBottomLeftRadius: '12px', borderBottomRightRadius: '12px' }}>
-            <span style={{ fontSize: '13px', color: '#64748b' }}>총 {filteredNotifications.length}건</span>
-            <div style={{ display: 'flex', gap: '4px' }}>
-              <button style={{ width: '32px', height: '32px', display: 'flex', alignItems: 'center', justifyContent: 'center', border: '1px solid #cbd5e1', borderRadius: '4px', backgroundColor: '#fff', color: '#94a3b8' }}><ChevronLeft size={16} /></button>
-              <button style={{ width: '32px', height: '32px', display: 'flex', alignItems: 'center', justifyContent: 'center', border: '1px solid #0f172a', borderRadius: '4px', backgroundColor: '#0f172a', color: '#fff', fontWeight: 600 }}>1</button>
-              <button style={{ width: '32px', height: '32px', display: 'flex', alignItems: 'center', justifyContent: 'center', border: '1px solid #cbd5e1', borderRadius: '4px', backgroundColor: '#fff', color: '#334155' }}>2</button>
-              <button style={{ width: '32px', height: '32px', display: 'flex', alignItems: 'center', justifyContent: 'center', border: '1px solid #cbd5e1', borderRadius: '4px', backgroundColor: '#fff', color: '#334155' }}>3</button>
-              <button style={{ width: '32px', height: '32px', display: 'flex', alignItems: 'center', justifyContent: 'center', border: '1px solid #cbd5e1', borderRadius: '4px', backgroundColor: '#fff', color: '#334155' }}>4</button>
-              <button style={{ width: '32px', height: '32px', display: 'flex', alignItems: 'center', justifyContent: 'center', border: '1px solid #cbd5e1', borderRadius: '4px', backgroundColor: '#fff', color: '#334155' }}>5</button>
-              <button style={{ width: '32px', height: '32px', display: 'flex', alignItems: 'center', justifyContent: 'center', border: '1px solid #cbd5e1', borderRadius: '4px', backgroundColor: '#fff', color: '#334155' }}><ChevronRight size={16} /></button>
-            </div>
+            <span style={{ fontSize: '13px', color: '#64748b' }}>총 {filteredNotifications.length}건 중 {(currentPage - 1) * itemsPerPage + 1}-{Math.min(currentPage * itemsPerPage, filteredNotifications.length)}건</span>
+            
+            {totalPages > 1 && (
+              <div style={{ display: 'flex', gap: '4px' }}>
+                <button 
+                  onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                  disabled={currentPage === 1}
+                  style={{ width: '32px', height: '32px', display: 'flex', alignItems: 'center', justifyContent: 'center', border: '1px solid #cbd5e1', borderRadius: '4px', backgroundColor: '#fff', color: currentPage === 1 ? '#cbd5e1' : '#475569', cursor: currentPage === 1 ? 'not-allowed' : 'pointer' }}
+                >
+                  <ChevronLeft size={16} />
+                </button>
+                
+                {Array.from({ length: totalPages }, (_, idx) => idx + 1).map(page => {
+                  // 간단한 페이지네이션 생략 없이 전부 보여주기 (필요시 slice 구현)
+                  if (page < currentPage - 2 || page > currentPage + 2) {
+                    if (page === 1 || page === totalPages) {
+                      return (
+                        <button key={page} onClick={() => setCurrentPage(page)} style={{ width: '32px', height: '32px', border: '1px solid #cbd5e1', borderRadius: '4px', backgroundColor: '#fff', color: '#475569', cursor: 'pointer' }}>{page}</button>
+                      );
+                    }
+                    if (page === currentPage - 3 || page === currentPage + 3) {
+                      return <span key={page} style={{ padding: '0 4px', color: '#cbd5e1' }}>...</span>;
+                    }
+                    return null;
+                  }
+                  
+                  return (
+                    <button 
+                      key={page}
+                      onClick={() => setCurrentPage(page)}
+                      style={{ 
+                        width: '32px', height: '32px', display: 'flex', alignItems: 'center', justifyContent: 'center', 
+                        border: currentPage === page ? '1px solid #0f172a' : '1px solid #cbd5e1', 
+                        borderRadius: '4px', 
+                        backgroundColor: currentPage === page ? '#0f172a' : '#fff', 
+                        color: currentPage === page ? '#fff' : '#334155', 
+                        fontWeight: currentPage === page ? 600 : 400,
+                        cursor: 'pointer'
+                      }}
+                    >
+                      {page}
+                    </button>
+                  );
+                })}
+                
+                <button 
+                  onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                  disabled={currentPage === totalPages}
+                  style={{ width: '32px', height: '32px', display: 'flex', alignItems: 'center', justifyContent: 'center', border: '1px solid #cbd5e1', borderRadius: '4px', backgroundColor: '#fff', color: currentPage === totalPages ? '#cbd5e1' : '#475569', cursor: currentPage === totalPages ? 'not-allowed' : 'pointer' }}
+                >
+                  <ChevronRight size={16} />
+                </button>
+              </div>
+            )}
           </div>
         </div>
 

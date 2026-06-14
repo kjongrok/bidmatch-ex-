@@ -1,6 +1,7 @@
 from flask import Blueprint, jsonify, request
 
 from services.bid_notice_service import BidNoticeService
+from services.ai_service import ai_service
 
 bid_notice_bp = Blueprint("bid_notices", __name__)
 bid_notice_service = BidNoticeService()
@@ -42,5 +43,10 @@ def get_matched_notices():
 def get_bid_notice(notice_id):
     notice = bid_notice_service.get_notice(notice_id)
     if notice is None:
-        return jsonify({"message": "Bid notice not found"}), 404
+        return jsonify({"message": "공고를 찾을 수 없습니다."}), 404
     return jsonify(notice)
+
+@bid_notice_bp.get("/<notice_id>/summary")
+def get_notice_summary(notice_id):
+    result = ai_service.generate_summary(notice_id)
+    return jsonify(result)

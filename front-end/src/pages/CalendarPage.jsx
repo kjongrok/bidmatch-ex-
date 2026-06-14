@@ -15,6 +15,8 @@ function CalendarPage() {
   const [filterBudget, setFilterBudget] = useState('ALL');
   const [filterRegion, setFilterRegion] = useState('ALL');
   const [filterCategory, setFilterCategory] = useState('ALL');
+  const [selectedDateNotices, setSelectedDateNotices] = useState(null);
+  const [selectedDateObj, setSelectedDateObj] = useState(null);
 
   useEffect(() => {
     // 1. 매칭된 맞춤형 공고 전체 가져오기
@@ -88,7 +90,7 @@ function CalendarPage() {
 
   return (
     <Layout>
-      <div className="dashboard-container" style={{ height: 'calc(100vh - 70px)', display: 'flex', flexDirection: 'column' }}>
+      <div className="dashboard-container" style={{ minHeight: 'calc(100vh - 70px)', display: 'flex', flexDirection: 'column' }}>
         
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px', flexShrink: 0 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
@@ -179,7 +181,7 @@ function CalendarPage() {
           </div>
         )}
 
-        <div className="card" style={{ padding: '0', flex: 1, display: 'flex', flexDirection: 'column', minHeight: '600px', overflow: 'hidden' }}>
+        <div className="card" style={{ padding: '0', flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0, overflow: 'hidden' }}>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', borderBottom: '1px solid #e2e8f0', backgroundColor: '#f8fafc' }}>
             {['일','월','화','수','목','금','토'].map((d, i) => (
               <div key={d} style={{ padding: '12px', textAlign: 'center', fontSize: '14px', fontWeight: 600, color: i === 0 ? '#ef4444' : i === 6 ? '#3b82f6' : '#64748b' }}>
@@ -188,7 +190,7 @@ function CalendarPage() {
             ))}
           </div>
           
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', flex: 1, gridAutoRows: 'minmax(120px, 1fr)', backgroundColor: '#e2e8f0', gap: '1px' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', flex: 1, gridAutoRows: 'minmax(110px, 1fr)', backgroundColor: '#e2e8f0', gap: '1px', minHeight: 0 }}>
             
             {/* Previous month padding */}
             {[...Array(firstDayOfMonth)].map((_, i) => {
@@ -213,7 +215,24 @@ function CalendarPage() {
               );
               
               return (
-                <div key={day} style={{ backgroundColor: isToday ? '#f0f9ff' : '#fff', padding: '8px', display: 'flex', flexDirection: 'column', gap: '4px', overflow: 'hidden' }}>
+                <div 
+                  key={day} 
+                  onClick={() => noticesOnThisDay.length > 0 && (setSelectedDateObj(new Date(year, month, day)), setSelectedDateNotices(noticesOnThisDay))}
+                  style={{ 
+                    backgroundColor: isToday ? '#f0f9ff' : '#fff', 
+                    padding: '8px', 
+                    display: 'flex', 
+                    flexDirection: 'column', 
+                    gap: '4px', 
+                    overflow: 'hidden', 
+                    minHeight: 0,
+                    cursor: noticesOnThisDay.length > 0 ? 'pointer' : 'default',
+                    transition: 'all 0.2s',
+                    border: '1px solid transparent'
+                  }}
+                  onMouseEnter={(e) => { if(noticesOnThisDay.length > 0) e.currentTarget.style.border = '1px solid #3b82f6'; }}
+                  onMouseLeave={(e) => { e.currentTarget.style.border = '1px solid transparent'; }}
+                >
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
                     <span style={{ 
                       fontSize: '14px', 
@@ -228,35 +247,33 @@ function CalendarPage() {
                     </span>
                     {noticesOnThisDay.length > 0 && (
                       <span style={{ fontSize: '11px', fontWeight: 600, color: '#f97316', backgroundColor: '#fff7ed', padding: '2px 6px', borderRadius: '10px' }}>
-                        {noticesOnThisDay.length}건
+                        총 {noticesOnThisDay.length}건
                       </span>
                     )}
                   </div>
                   
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', overflowY: 'auto' }}>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', overflow: 'hidden', flex: 1 }}>
                     {noticesOnThisDay.slice(0, 3).map((n, idx) => (
                       <div 
                         key={idx} 
-                        onClick={() => navigate('/notice/' + n.id)}
                         style={{ 
                           backgroundColor: '#f1f5f9', 
                           borderLeft: '3px solid #f97316', 
                           padding: '4px 6px', 
                           borderRadius: '0 4px 4px 0', 
                           fontSize: '11px', 
-                          cursor: 'pointer',
                           whiteSpace: 'nowrap',
                           overflow: 'hidden',
                           textOverflow: 'ellipsis',
-                          color: '#334155'
+                          color: '#334155',
+                          flexShrink: 0
                         }}
-                        title={n.name}
                       >
                         <strong style={{ color: '#0f172a' }}>{n.match}</strong> {n.name}
                       </div>
                     ))}
                     {noticesOnThisDay.length > 3 && (
-                      <div style={{ fontSize: '11px', color: '#64748b', textAlign: 'center', marginTop: '2px', cursor: 'pointer' }}>
+                      <div style={{ fontSize: '11px', color: '#64748b', textAlign: 'center', marginTop: 'auto', padding: '2px 0', backgroundColor: '#f8fafc', borderRadius: '4px', fontWeight: 600 }}>
                         + {noticesOnThisDay.length - 3}건 더보기
                       </div>
                     )}
@@ -276,6 +293,77 @@ function CalendarPage() {
         </div>
 
       </div>
+
+      {/* Date Detail Modal */}
+      {selectedDateNotices && (
+        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(15, 23, 42, 0.6)', backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 9999 }}>
+          <div style={{ width: '600px', maxHeight: '80vh', backgroundColor: '#fff', borderRadius: '16px', display: 'flex', flexDirection: 'column', boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)' }}>
+            <div style={{ padding: '24px', borderBottom: '1px solid #e2e8f0', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <div>
+                <h2 style={{ fontSize: '20px', fontWeight: 700, color: '#0f172a', marginBottom: '4px' }}>
+                  {selectedDateObj?.getFullYear()}년 {selectedDateObj?.getMonth() + 1}월 {selectedDateObj?.getDate()}일
+                </h2>
+                <p style={{ fontSize: '13px', color: '#64748b', margin: 0 }}>
+                  총 {selectedDateNotices.length}건의 맞춤형 공고가 마감되는 날입니다.
+                </p>
+              </div>
+              <button 
+                onClick={() => setSelectedDateNotices(null)}
+                style={{ width: '32px', height: '32px', borderRadius: '50%', backgroundColor: '#f1f5f9', border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: '#64748b' }}
+              >
+                ✕
+              </button>
+            </div>
+            
+            <div style={{ flex: 1, overflowY: 'auto', padding: '24px', display: 'flex', flexDirection: 'column', gap: '12px', backgroundColor: '#f8fafc' }}>
+              {selectedDateNotices.map((n, idx) => (
+                <div 
+                  key={idx}
+                  onClick={() => navigate('/notice/' + n.id)}
+                  style={{ backgroundColor: '#fff', border: '1px solid #e2e8f0', borderRadius: '12px', padding: '16px', cursor: 'pointer', transition: 'box-shadow 0.2s', display: 'flex', flexDirection: 'column', gap: '12px' }}
+                  onMouseEnter={(e) => e.currentTarget.style.boxShadow = '0 10px 15px -3px rgba(0, 0, 0, 0.1)'}
+                  onMouseLeave={(e) => e.currentTarget.style.boxShadow = 'none'}
+                >
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <span style={{ backgroundColor: '#fff7ed', color: '#ea580c', padding: '4px 8px', borderRadius: '6px', fontSize: '12px', fontWeight: 700 }}>
+                        적합도 {n.match}
+                      </span>
+                      <span style={{ fontSize: '12px', color: '#64748b', fontWeight: 600 }}>{n.biz_type}</span>
+                    </div>
+                    <span style={{ fontSize: '12px', color: n.status === 'OPEN' ? '#22c55e' : '#64748b', fontWeight: 600 }}>
+                      {n.status === 'OPEN' ? '진행중' : '마감됨'}
+                    </span>
+                  </div>
+                  
+                  <h3 style={{ fontSize: '16px', fontWeight: 700, color: '#0f172a', margin: 0, lineHeight: 1.4 }}>
+                    {n.name}
+                  </h3>
+                  
+                  <div style={{ display: 'flex', gap: '16px', fontSize: '13px', color: '#475569' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                      <span style={{ fontWeight: 600, color: '#94a3b8' }}>기관:</span> {n.org}
+                    </div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                      <span style={{ fontWeight: 600, color: '#94a3b8' }}>예산:</span> {n.budget ? Number(n.budget).toLocaleString() + '원' : '미정'}
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+            
+            <div style={{ padding: '16px 24px', borderTop: '1px solid #e2e8f0', display: 'flex', justifyContent: 'flex-end', backgroundColor: '#fff', borderBottomLeftRadius: '16px', borderBottomRightRadius: '16px' }}>
+              <button 
+                onClick={() => setSelectedDateNotices(null)}
+                style={{ padding: '0 24px', height: '40px', backgroundColor: '#0f172a', color: '#fff', border: 'none', borderRadius: '8px', fontWeight: 600, cursor: 'pointer' }}
+              >
+                닫기
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
     </Layout>
   );
 }

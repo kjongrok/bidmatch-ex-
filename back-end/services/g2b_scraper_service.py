@@ -24,7 +24,24 @@ class G2BScraperService:
         inqryBgnDt = start_time.strftime("%Y%m%d%H%M")
         inqryEndDt = now.strftime("%Y%m%d%H%M")
 
+        conn = get_connection()
+        log_id = None
+        try:
+            with conn.cursor() as cursor:
+                cursor.execute("""
+                    INSERT INTO collection_run_logs (job_name, status, query_from, query_to)
+                    VALUES (%s, %s, %s, %s)
+                """, ("G2B_AUTO_SYNC", "RUNNING", start_time, now))
+                log_id = cursor.lastrowid
+            conn.commit()
+        except Exception as e:
+            print("[Scraper] Failed to create run log:", e)
+        finally:
+            conn.close()
+
         inserted_count = 0
+        error_count = 0
+        error_message = None
 
         for endpoint in self.endpoints:
             url = f"{self.base_url}/{endpoint}"
@@ -58,9 +75,14 @@ class G2BScraperService:
                         if items:
                             inserted_count += self._save_items_to_db(items, biz_type)
                     elif "nkoneps.com.response.ResponseError" in data:
-                        print(f"[Scraper] API Error: {data['nkoneps.com.response.ResponseError']['header']['resultMsg']}")
+                        err_msg = data['nkoneps.com.response.ResponseError']['header']['resultMsg']
+                        print(f"[Scraper] API Error: {err_msg}")
+                        error_count += 1
+                        error_message = err_msg
             except Exception as e:
                 print(f"[Scraper] Error fetching from {url}: {e}")
+                error_count += 1
+                error_message = str(e)
 
         print(f"[Scraper] Finished fetch. Inserted {inserted_count} new notices.")
 
@@ -69,6 +91,23 @@ class G2BScraperService:
             run_global_matching()
             print("[Scraper] Match engine finished.")
         
+        # Update run log
+        if log_id:
+            conn = get_connection()
+            try:
+                with conn.cursor() as cursor:
+                    final_status = "ERROR" if error_count > 0 else "SUCCESS"
+                    cursor.execute("""
+                        UPDATE collection_run_logs 
+                        SET status = %s, ended_at = NOW(), saved_count = %s, error_count = %s, error_message = %s
+                        WHERE id = %s
+                    """, (final_status, inserted_count, error_count, error_message, log_id))
+                conn.commit()
+            except Exception as e:
+                print("[Scraper] Failed to update run log:", e)
+            finally:
+                conn.close()
+
         return inserted_count
 
     def _save_items_to_db(self, items, biz_type="UNKNOWN"):

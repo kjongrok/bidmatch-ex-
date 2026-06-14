@@ -24,3 +24,12 @@ def require_auth(f):
         request.user = payload
         return f(*args, **kwargs)
     return decorated_function
+
+def require_admin(f):
+    @wraps(f)
+    @require_auth
+    def decorated_function(*args, **kwargs):
+        if request.user.get('role') != 'ADMIN':
+            return jsonify({'success': False, 'message': '관리자 권한이 필요합니다.'}), 403
+        return f(*args, **kwargs)
+    return decorated_function
