@@ -128,7 +128,10 @@ function AdminDashboard() {
         } else {
           alert(res.data.message);
         }
-      }).catch(err => console.error(err));
+      }).catch(err => {
+        alert(err.response?.data?.message || "처리 중 오류가 발생했습니다.");
+        console.error(err);
+      });
   };
 
   const handleUpdateUserStatus = (userId, newStatus) => {
@@ -141,7 +144,10 @@ function AdminDashboard() {
         } else {
           alert(res.data.message);
         }
-      }).catch(err => console.error(err));
+      }).catch(err => {
+        alert(err.response?.data?.message || "처리 중 오류가 발생했습니다.");
+        console.error(err);
+      });
   };
 
   const handleDeleteRegularUser = (userId) => {
@@ -155,7 +161,10 @@ function AdminDashboard() {
         } else {
           alert(res.data.message);
         }
-      }).catch(err => console.error(err));
+      }).catch(err => {
+        alert(err.response?.data?.message || "처리 중 오류가 발생했습니다.");
+        console.error(err);
+      });
   };
 
   return (
