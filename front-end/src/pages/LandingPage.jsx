@@ -22,7 +22,7 @@ function LandingPage() {
       <nav style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '24px 48px', backgroundColor: 'rgba(15, 23, 42, 0.8)', backdropFilter: 'blur(10px)', position: 'sticky', top: 0, zIndex: 50 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
           <ShieldCheck size={28} color="#3b82f6" />
-          <span style={{ fontSize: '20px', fontWeight: 800, tracking: 'tight' }}>PPI Admin</span>
+          <span style={{ fontSize: '20px', fontWeight: 800, tracking: 'tight' }}>BidMatch</span>
         </div>
         <div style={{ display: 'flex', gap: '16px' }}>
           {isAuthenticated ? (
@@ -89,7 +89,7 @@ function LandingPage() {
           
           <div style={{ textAlign: 'center', marginBottom: '64px' }}>
             <h2 style={{ fontSize: '36px', fontWeight: 700, marginBottom: '16px' }}>핵심 기능</h2>
-            <p style={{ fontSize: '16px', color: '#94a3b8' }}>PPI Admin이 제공하는 강력한 도구들로 비즈니스 기회를 창출하세요.</p>
+            <p style={{ fontSize: '16px', color: '#94a3b8' }}>BidMatch가 제공하는 강력한 도구들로 비즈니스 기회를 창출하세요.</p>
           </div>
 
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '32px' }}>
@@ -124,7 +124,7 @@ function LandingPage() {
 
       {/* Footer */}
       <footer style={{ padding: '48px', textAlign: 'center', borderTop: '1px solid #334155', color: '#64748b' }}>
-        <p>© 2026 PPI Admin. All rights reserved.</p>
+        <p>© 2026 BidMatch. All rights reserved.</p>
       </footer>
 
     </div>

@@ -12,7 +12,7 @@ function PasswordReset() {
         <div style={{ width: '56px', height: '56px', backgroundColor: '#0f172a', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px' }}>
           <ShieldCheck size={28} color="#fff" />
         </div>
-        <div style={{ fontSize: '16px', fontWeight: 700, color: '#0f172a', marginBottom: '4px' }}>PPI Admin</div>
+        <div style={{ fontSize: '16px', fontWeight: 700, color: '#0f172a', marginBottom: '4px' }}>BidMatch</div>
         <div style={{ fontSize: '14px', color: '#64748b' }}>Public Procurement Intelligence</div>
       </div>
 

@@ -48,7 +48,7 @@ function SignUp() {
         
         {/* Header */}
         <div style={{ backgroundColor: '#0f172a', padding: '32px', color: '#fff', textAlign: 'center' }}>
-          <div style={{ fontSize: '24px', fontWeight: 700, marginBottom: '8px' }}>PPI Admin</div>
+          <div style={{ fontSize: '24px', fontWeight: 700, marginBottom: '8px' }}>BidMatch</div>
           <div style={{ fontSize: '13px', color: '#94a3b8' }}>Public Procurement Intelligence</div>
         </div>
 
