@@ -340,7 +340,20 @@ function AdminDashboard() {
                     </div>
                     
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                         <div className="panel">
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '12px', fontSize: '14px', fontWeight: 600 }}>
+                        <div style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: '#f97316' }}></div>
+                        Worker Node #04
+                      </div>
+                      <span style={{ fontSize: '12px', fontWeight: 700, color: '#f97316' }}>HIGH LOAD</span>
+                    </div>
+                  </div>
+                </div>
+                
+              </div>
+            </div>
+          </>
+        ) : activeTab === 'companies' ? (
+          <div className="panel">
              <div className="panel-header">
                <div className="panel-title">기업 증빙 서류 관리</div>
                <p style={{ fontSize: '13px', color: '#64748b', marginTop: '4px' }}>사용자가 제출한 사업자 증빙 서류를 확인하고 승인/반려를 처리합니다.</p>
@@ -485,7 +498,7 @@ function AdminDashboard() {
                 </table>
               </div>
             </div>
-        )}
+        ) : null}
 
       </div>
     </Layout>
