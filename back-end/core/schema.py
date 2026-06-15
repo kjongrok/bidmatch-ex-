@@ -9,6 +9,8 @@ TABLES = {
             "status": "VARCHAR(30) NOT NULL DEFAULT 'active'",
             "email_verified_at": "DATETIME NULL",
             "last_login_at": "DATETIME NULL",
+            "auth_provider": "VARCHAR(50) NULL",
+            "oauth_id": "VARCHAR(255) NULL",
             "created_at": "DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP",
             "updated_at": "DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP",
         },
@@ -16,7 +18,9 @@ TABLES = {
         "unique_keys": {
             "uk_users_email": ["email"],
         },
-        "indexes": {},
+        "indexes": {
+            "idx_users_oauth": ["auth_provider", "oauth_id"],
+        },
         "foreign_keys": {},
     },
     "user_profiles": {
